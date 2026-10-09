@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Download Your App</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f4f6fb;--surface:#fff;--ink:#17214d;--muted:#5a6388;--line:#d9deef;--brand:#2b3bd1;--brand-ink:#fff;--accent:#ffc93c;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1330;--surface:#181d45;--ink:#eef0ff;--muted:#a3abd6;--line:#2c3365;--brand:#8c97ff;--brand-ink:#0f1330}}
+:root[data-theme="dark"]{--bg:#0f1330;--surface:#181d45;--ink:#eef0ff;--muted:#a3abd6;--line:#2c3365;--brand:#8c97ff;--brand-ink:#0f1330}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 1.0625rem/1.6 "Source Sans 3",system-ui,sans-serif}
+h1,h2,h3{font-family:"Bricolage Grotesque","Trebuchet MS",sans-serif;line-height:1.1;margin:0}
+main{max-width:64rem;margin:0 auto;padding:0 1.25rem}
+.hero{padding:4.5rem 0 3rem;display:grid;gap:2.5rem;align-items:center}
+@media(min-width:48rem){.hero{grid-template-columns:1.2fr 1fr}}
+.hero h1{font-size:clamp(2.6rem,7vw,4.5rem);font-weight:800;letter-spacing:-.03em}
+.hero p{max-width:34rem;color:var(--muted);font-size:1.2rem;margin:1.1rem 0 1.8rem}
+.btn{display:inline-flex;align-items:center;gap:.6rem;background:var(--brand);color:var(--brand-ink);border:0;border-radius:.9rem;padding:1rem 1.6rem;font:600 1.1rem "Source Sans 3",sans-serif;text-decoration:none;cursor:pointer}
+.btn:hover{filter:brightness(1.1)}
+:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+.meta{margin-top:.9rem;color:var(--muted);font-size:.95rem}
+.phone{justify-self:center;width:min(16rem,70vw);aspect-ratio:9/18;border:.6rem solid var(--ink);border-radius:2.2rem;background:var(--surface);display:grid;place-items:center;position:relative}
+.phone::before{content:"";position:absolute;top:.6rem;width:30%;height:.35rem;border-radius:1rem;background:var(--ink)}
+.phone b{font:800 5rem "Bricolage Grotesque",sans-serif;color:var(--brand)}
+.phone i{position:absolute;bottom:2rem;left:2rem;right:2rem;height:.7rem;border-radius:1rem;background:var(--accent)}
+h2{font-size:1.9rem;font-weight:600;margin:3rem 0 1.2rem}
+.platforms{display:grid;gap:.9rem;grid-template-columns:repeat(auto-fit,minmax(13rem,1fr))}
+.plat{display:flex;flex-direction:column;gap:.3rem;background:var(--surface);border:1px solid var(--line);border-radius:1rem;padding:1.1rem 1.2rem;color:var(--ink);text-decoration:none}
+.plat strong{font-family:"Bricolage Grotesque",sans-serif;font-size:1.2rem}
+.plat span{color:var(--muted);font-size:.95rem}
+.plat:hover{border-color:var(--brand)}
+.plat.on{border-color:var(--brand);box-shadow:0 0 0 2px var(--brand)}
+ol{padding-left:1.3rem;max-width:40rem}
+li{margin:.6rem 0}
+code{background:var(--surface);border:1px solid var(--line);border-radius:.4rem;padding:.1rem .4rem;font-size:.95em}
+footer{border-top:1px solid var(--line);margin-top:4rem;padding:1.5rem 0 2.5rem;color:var(--muted);font-size:.95rem}
+#note{display:none;margin-top:.9rem;padding:.7rem 1rem;border-radius:.7rem;background:var(--accent);color:#2b2200;font-size:.95rem}
+</style>
+
+</head>
+
+<body>
+  
+<main>
+  <section class="hero">
+    <div>
+      <h1 id="name"></h1>
+      <p id="tagline"></p>
+      <button class="btn" id="main-dl" type="button"></button>
+      <div class="meta" id="meta"></div>
+      <div id="note" role="status"></div>
+    </div>
+    <div class="phone" aria-hidden="true"><b id="initial"></b><i></i></div>
+  </section>
+
+  <section>
+    <h2>All downloads</h2>
+    <div class="platforms" id="platforms"></div>
+  </section>
+
+  <section>
+    <h2>Install in three steps</h2>
+    <ol>
+      <li>Download the file for your device.</li>
+      <li>Open it. On Android, allow installs from this source if asked.</li>
+      <li>Launch <span class="appname"></span> and sign in.</li>
+    </ol>
+  </section>
+
+  <footer>&copy; <span id="year"></span> <span class="appname"></span> &middot; <a id="support" style="color:inherit">Contact support</a></footer>
+</main>
+
+<script>
+/* EDIT THIS BLOCK: replace the name, text and download links. */
+var APP = {
+  name: "Ignite Whatsapp",
+  tagline: "Automation for Whatsapp Business",
+  version: "1.0.0",
+  support: "mailto:Johnsonsharma424@gmail.com",
+  downloads: {
+    android: { label: "Android", file: "APK", url: "#" },
+    // IMPORTANT: "D:/..." was a path on your own PC - it will not work for
+    // customers. Upload Baily.exe to real file hosting (your server's
+    // /downloads folder, S3, Backblaze B2, etc.) and put that https:// URL
+    // here. See README.md "Hosting the installer file" for options.
+    windows: { label: "Windows", file: "EXE installer", url: "D:\\ig_whap\\dist\\Baily Setup 1.0.0.exe" },
+    mac:     { label: "macOS",   file: "DMG", url: "#" },
+    linux:   { label: "Linux",   file: "AppImage", url: "#" }
+  }
+};
+
+function detect(){
+  var ua = navigator.userAgent || "";
+  if (/android/i.test(ua)) return "android";
+  if (/windows/i.test(ua)) return "windows";
+  if (/mac/i.test(ua) && !/iphone|ipad/i.test(ua)) return "mac";
+  if (/linux/i.test(ua)) return "linux";
+  return "android";
+}
+
+function go(key){
+  var d = APP.downloads[key], note = document.getElementById("note");
+  if (!d.url || d.url === "#"){
+    note.textContent = "The " + d.label + " download link is not set yet.";
+    note.style.display = "block";
+    return;
+  }
+
+  note.style.display = "none";
+  window.location.href = d.url;
+}
+
+(function(){
+  var cur = detect(), cd = APP.downloads[cur];
+  document.title = "Download " + APP.name;
+  document.getElementById("name").textContent = APP.name;
+  document.getElementById("tagline").textContent = APP.tagline;
+  document.getElementById("initial").textContent = APP.name.charAt(0);
+  document.getElementById("year").textContent = new Date().getFullYear();
+  document.getElementById("support").href = APP.support;
+  Array.prototype.forEach.call(document.querySelectorAll(".appname"), function(e){ e.textContent = APP.name; });
+  var b = document.getElementById("main-dl");
+  b.textContent = "Download for " + cd.label;
+  b.addEventListener("click", function(){ go(cur); });
+  document.getElementById("meta").textContent = "Version " + APP.version + " \u00b7 " + cd.file;
+  var wrap = document.getElementById("platforms");
+  Object.keys(APP.downloads).forEach(function(k){
+    var d = APP.downloads[k], a = document.createElement("a");
+    a.className = "plat" + (k === cur ? " on" : "");
+    a.href = "#";
+    a.innerHTML = "<strong></strong><span></span>";
+    a.firstChild.textContent = d.label;
+    a.lastChild.textContent = d.file;
+    a.addEventListener("click", function(e){ e.preventDefault(); go(k); });
+    wrap.appendChild(a);
+  });
+})();
+</script>
+
+</body>
+</html>

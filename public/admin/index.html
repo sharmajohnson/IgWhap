@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Botmaster — License Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f4f6fb;--surface:#fff;--ink:#17214d;--muted:#5a6388;--line:#d9deef;--brand:#2b3bd1;--brand-ink:#fff;--accent:#ffc93c;--ok:#1a9c5e;--warn:#c17c00;--bad:#c23b3b}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1330;--surface:#181d45;--ink:#eef0ff;--muted:#a3abd6;--line:#2c3365;--brand:#8c97ff;--brand-ink:#0f1330}}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 .95rem/1.5 "Source Sans 3",system-ui,sans-serif}
+h1,h2,h3{font-family:"Bricolage Grotesque","Trebuchet MS",sans-serif;line-height:1.15;margin:0}
+button,input,select{font:inherit}
+a{color:var(--brand)}
+
+/* Login screen */
+#login-screen{min-height:100vh;display:grid;place-items:center;padding:1rem}
+.login-card{background:var(--surface);border:1px solid var(--line);border-radius:1rem;padding:2.2rem;width:min(22rem,100%)}
+.login-card h1{font-size:1.5rem;margin-bottom:.3rem}
+.login-card p{color:var(--muted);margin:0 0 1.4rem}
+.field{display:flex;flex-direction:column;gap:.35rem;margin-bottom:1rem}
+.field label{font-size:.85rem;color:var(--muted)}
+.field input,.field select{border:1px solid var(--line);border-radius:.6rem;padding:.6rem .7rem;background:var(--bg);color:var(--ink)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;background:var(--brand);color:var(--brand-ink);border:0;border-radius:.6rem;padding:.65rem 1.1rem;font-weight:600;cursor:pointer}
+.btn:hover{filter:brightness(1.08)}
+.btn.secondary{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.btn.danger{background:var(--bad);color:#fff}
+.btn.small{padding:.4rem .7rem;font-size:.85rem}
+.error-text{color:var(--bad);font-size:.85rem;min-height:1.2em}
+
+/* App shell */
+#app{display:none;min-height:100vh;grid-template-columns:15rem 1fr}
+@media(min-width:1px){#app.visible{display:grid}}
+nav{background:var(--surface);border-right:1px solid var(--line);padding:1.4rem 1rem;display:flex;flex-direction:column;gap:.3rem}
+nav h1{font-size:1.2rem;padding:0 .6rem 1rem}
+nav button{text-align:left;background:none;border:0;border-radius:.6rem;padding:.65rem .8rem;color:var(--ink);cursor:pointer;font-weight:600}
+nav button:hover{background:var(--bg)}
+nav button.active{background:var(--brand);color:var(--brand-ink)}
+nav .spacer{flex:1}
+main{padding:1.8rem clamp(1rem,3vw,2.5rem);max-width:72rem}
+.view{display:none}
+.view.active{display:block}
+.row{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:1.2rem}
+
+/* Stat cards */
+.stats{display:grid;gap:.9rem;grid-template-columns:repeat(auto-fit,minmax(10rem,1fr));margin-bottom:1.6rem}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:.9rem;padding:1.1rem}
+.stat b{display:block;font-size:1.7rem;font-family:"Bricolage Grotesque",sans-serif}
+.stat span{color:var(--muted);font-size:.85rem}
+
+/* Tables */
+table{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--line);border-radius:.9rem;overflow:hidden}
+th,td{text-align:left;padding:.7rem .9rem;border-bottom:1px solid var(--line);font-size:.9rem}
+th{color:var(--muted);font-weight:600;font-size:.8rem;text-transform:uppercase;letter-spacing:.03em}
+tr:last-child td{border-bottom:0}
+code.key{font-family:ui-monospace,Consolas,monospace;background:var(--bg);padding:.2rem .4rem;border-radius:.4rem}
+.badge{display:inline-block;padding:.15rem .55rem;border-radius:1rem;font-size:.75rem;font-weight:600}
+.badge.active{background:#1a9c5e22;color:var(--ok)}
+.badge.revoked{background:#c23b3b22;color:var(--bad)}
+.badge.expired{background:#c17c0022;color:var(--warn)}
+.actions{display:flex;gap:.4rem;flex-wrap:wrap}
+
+/* Modal */
+.modal-bg{display:none;position:fixed;inset:0;background:#00001055;place-items:center;padding:1rem;z-index:10}
+.modal-bg.visible{display:grid}
+.modal{background:var(--surface);border-radius:1rem;padding:1.6rem;width:min(28rem,100%)}
+.modal h3{margin-bottom:1rem}
+.modal .field{margin-bottom:.9rem}
+.modal-actions{display:flex;justify-content:flex-end;gap:.6rem;margin-top:1rem}
+.hint{color:var(--muted);font-size:.82rem;margin-top:.3rem}
+.empty{color:var(--muted);padding:2rem;text-align:center}
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <form class="login-card" id="login-form">
+    <h1>Botmaster</h1>
+    <p>Sign in to manage license keys.</p>
+    <div class="field"><label>Email</label><input type="email" id="login-email" required></div>
+    <div class="field"><label>Password</label><input type="password" id="login-password" required></div>
+    <div class="error-text" id="login-error"></div>
+    <button class="btn" type="submit" style="width:100%">Sign in</button>
+  </form>
+</div>
+
+<div id="app">
+  <nav>
+    <h1>Botmaster</h1>
+    <button data-view="overview" class="nav-btn active">Overview</button>
+    <button data-view="customers" class="nav-btn">Customers</button>
+    <button data-view="licenses" class="nav-btn">Licenses</button>
+    <div class="spacer"></div>
+    <button class="btn secondary small" id="logout-btn">Log out</button>
+  </nav>
+
+  <main>
+    <!-- Overview -->
+    <section class="view active" id="view-overview">
+      <div class="row"><h2>Overview</h2></div>
+      <div class="stats" id="stats"></div>
+      <p class="hint">Stats update whenever you reload this tab.</p>
+    </section>
+
+    <!-- Customers -->
+    <section class="view" id="view-customers">
+      <div class="row">
+        <h2>Customers</h2>
+        <button class="btn" id="add-customer-btn">+ Add customer</button>
+      </div>
+      <table>
+        <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Licenses</th><th>Added</th><th></th></tr></thead>
+        <tbody id="customers-body"></tbody>
+      </table>
+    </section>
+
+    <!-- Licenses -->
+    <section class="view" id="view-licenses">
+      <div class="row">
+        <h2>Licenses</h2>
+        <button class="btn" id="add-license-btn">+ Generate key</button>
+      </div>
+      <table>
+        <thead><tr><th>Key</th><th>Customer</th><th>Plan</th><th>Devices</th><th>Status</th><th>Expires</th><th></th></tr></thead>
+        <tbody id="licenses-body"></tbody>
+      </table>
+    </section>
+  </main>
+</div>
+
+<!-- Modals -->
+<div class="modal-bg" id="customer-modal">
+  <form class="modal" id="customer-form">
+    <h3>Add customer</h3>
+    <div class="field"><label>Name</label><input id="c-name" required></div>
+    <div class="field"><label>Email</label><input type="email" id="c-email" required></div>
+    <div class="field"><label>Phone (optional)</label><input id="c-phone"></div>
+    <div class="field"><label>Notes (optional)</label><input id="c-notes"></div>
+    <div class="modal-actions">
+      <button type="button" class="btn secondary" data-close="customer-modal">Cancel</button>
+      <button type="submit" class="btn">Save</button>
+    </div>
+  </form>
+</div>
+
+<div class="modal-bg" id="license-modal">
+  <form class="modal" id="license-form">
+    <h3>Generate license key</h3>
+    <div class="field">
+      <label>Customer</label>
+      <select id="l-customer" required></select>
+    </div>
+    <div class="field">
+      <label>Plan</label>
+      <select id="l-plan">
+        <option value="standard">Standard</option>
+        <option value="pro">Pro</option>
+        <option value="lifetime">Lifetime</option>
+      </select>
+    </div>
+    <div class="field"><label>Max devices</label><input type="number" id="l-devices" value="1" min="1"></div>
+    <div class="field">
+      <label>Expires in (days, blank = never)</label>
+      <input type="number" id="l-expires" placeholder="e.g. 365">
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn secondary" data-close="license-modal">Cancel</button>
+      <button type="submit" class="btn">Generate</button>
+    </div>
+  </form>
+</div>
+
+<script>
+const API = '/api/admin';
+let TOKEN = localStorage.getItem('botmaster_token') || '';
+
+function headers(json=true){
+  const h = { Authorization: 'Bearer ' + TOKEN };
+  if (json) h['Content-Type'] = 'application/json';
+  return h;
+}
+
+async function api(path, opts={}){
+  const res = await fetch(API + path, { ...opts, headers: headers(!!opts.body) });
+  if (res.status === 401){ logout(); throw new Error('Session expired'); }
+  const data = await res.json().catch(()=>({}));
+  if (!res.ok) throw new Error(data.error || 'Request failed');
+  return data;
+}
+
+function showApp(){
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').classList.add('visible');
+  loadOverview(); loadCustomers(); loadLicenses();
+}
+
+function logout(){
+  TOKEN = ''; localStorage.removeItem('botmaster_token');
+  document.getElementById('app').classList.remove('visible');
+  document.getElementById('login-screen').style.display = 'grid';
+}
+
+document.getElementById('login-form').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const email = document.getElementById('login-email').value;
+  const password = document.getElementById('login-password').value;
+  const errEl = document.getElementById('login-error');
+  errEl.textContent = '';
+  try{
+    const res = await fetch('/api/admin/auth/login', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ email, password })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Login failed');
+    TOKEN = data.token;
+    localStorage.setItem('botmaster_token', TOKEN);
+    showApp();
+  }catch(err){ errEl.textContent = err.message; }
+});
+
+document.getElementById('logout-btn').addEventListener('click', logout);
+
+// Nav switching
+document.querySelectorAll('.nav-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('view-' + btn.dataset.view).classList.add('active');
+  });
+});
+
+// Modal open/close
+function openModal(id){ document.getElementById(id).classList.add('visible'); }
+function closeModal(id){ document.getElementById(id).classList.remove('visible'); }
+document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click', ()=>closeModal(b.dataset.close)));
+
+// ---- Overview ----
+async function loadOverview(){
+  try{
+    const s = await api('/stats');
+    document.getElementById('stats').innerHTML = `
+      <div class="stat"><b>${s.totalCustomers}</b><span>Customers</span></div>
+      <div class="stat"><b>${s.activeLicenses}</b><span>Active licenses</span></div>
+      <div class="stat"><b>${s.totalActivations}</b><span>Devices online</span></div>
+      <div class="stat"><b>${s.expiringSoon}</b><span>Expiring in 7 days</span></div>
+      <div class="stat"><b>${s.revokedLicenses}</b><span>Revoked</span></div>
+      <div class="stat"><b>${s.totalLicenses}</b><span>Total licenses issued</span></div>
+    `;
+  }catch(e){}
+}
+
+// ---- Customers ----
+let customersCache = [];
+async function loadCustomers(){
+  customersCache = await api('/customers');
+  document.getElementById('customers-body').innerHTML = customersCache.map(c => `
+    <tr>
+      <td>${esc(c.name)}</td><td>${esc(c.email)}</td><td>${esc(c.phone||'—')}</td>
+      <td>${c.license_count}</td><td>${fmtDate(c.created_at)}</td>
+      <td class="actions"><button class="btn danger small" data-del-customer="${c.id}">Delete</button></td>
+    </tr>`).join('') || `<tr><td colspan="6" class="empty">No customers yet. Add one to generate license keys.</td></tr>`;
+
+  document.querySelectorAll('[data-del-customer]').forEach(b=>b.addEventListener('click', async ()=>{
+    if (!confirm('Delete this customer and all their licenses?')) return;
+    await api('/customers/' + b.dataset.delCustomer, { method:'DELETE' });
+    loadCustomers(); loadLicenses(); loadOverview();
+  }));
+
+  const sel = document.getElementById('l-customer');
+  sel.innerHTML = customersCache.map(c => `<option value="${c.id}">${esc(c.name)} (${esc(c.email)})</option>`).join('');
+}
+
+document.getElementById('add-customer-btn').addEventListener('click', ()=>openModal('customer-modal'));
+document.getElementById('customer-form').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  try{
+    await api('/customers', { method:'POST', body: JSON.stringify({
+      name: document.getElementById('c-name').value,
+      email: document.getElementById('c-email').value,
+      phone: document.getElementById('c-phone').value,
+      notes: document.getElementById('c-notes').value
+    })});
+    e.target.reset(); closeModal('customer-modal'); loadCustomers(); loadOverview();
+  }catch(err){ alert(err.message); }
+});
+
+// ---- Licenses ----
+async function loadLicenses(){
+  const rows = await api('/licenses');
+  document.getElementById('licenses-body').innerHTML = rows.map(l => `
+    <tr>
+      <td><code class="key">${l.license_key}</code></td>
+      <td>${esc(l.customer_name)}<br><span class="hint">${esc(l.customer_email)}</span></td>
+      <td>${esc(l.plan)}</td>
+      <td>${l.active_devices} / ${l.max_devices}</td>
+      <td><span class="badge ${l.status}">${l.status}</span></td>
+      <td>${l.expires_at ? fmtDate(l.expires_at) : 'Never'}</td>
+      <td class="actions">
+        ${l.status === 'active'
+          ? `<button class="btn secondary small" data-revoke="${l.id}">Revoke</button>`
+          : `<button class="btn secondary small" data-reactivate="${l.id}">Reactivate</button>`}
+        <button class="btn secondary small" data-extend="${l.id}">+30 days</button>
+        <button class="btn danger small" data-del-license="${l.id}">Delete</button>
+      </td>
+    </tr>`).join('') || `<tr><td colspan="7" class="empty">No licenses yet.</td></tr>`;
+
+  document.querySelectorAll('[data-revoke]').forEach(b=>b.addEventListener('click', async ()=>{
+    await api('/licenses/' + b.dataset.revoke + '/revoke', { method:'POST' }); loadLicenses(); loadOverview();
+  }));
+  document.querySelectorAll('[data-reactivate]').forEach(b=>b.addEventListener('click', async ()=>{
+    await api('/licenses/' + b.dataset.reactivate + '/reactivate', { method:'POST' }); loadLicenses(); loadOverview();
+  }));
+  document.querySelectorAll('[data-extend]').forEach(b=>b.addEventListener('click', async ()=>{
+    await api('/licenses/' + b.dataset.extend + '/extend', { method:'POST', body: JSON.stringify({ days: 30 }) }); loadLicenses();
+  }));
+  document.querySelectorAll('[data-del-license]').forEach(b=>b.addEventListener('click', async ()=>{
+    if (!confirm('Delete this license permanently?')) return;
+    await api('/licenses/' + b.dataset.delLicense, { method:'DELETE' }); loadLicenses(); loadOverview();
+  }));
+}
+
+document.getElementById('add-license-btn').addEventListener('click', ()=>{
+  if (!customersCache.length){ alert('Add a customer first.'); return; }
+  openModal('license-modal');
+});
+document.getElementById('license-form').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  try{
+    await api('/licenses', { method:'POST', body: JSON.stringify({
+      customer_id: document.getElementById('l-customer').value,
+      plan: document.getElementById('l-plan').value,
+      max_devices: Number(document.getElementById('l-devices').value || 1),
+      expires_in_days: document.getElementById('l-expires').value || null
+    })});
+    e.target.reset(); closeModal('license-modal'); loadLicenses(); loadOverview();
+  }catch(err){ alert(err.message); }
+});
+
+function esc(s){ return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function fmtDate(s){ return s ? new Date(s).toLocaleDateString() : '—'; }
+
+// Auto-login if we have a saved token
+if (TOKEN) showApp(); 
+</script>
+</body>
+</html>
